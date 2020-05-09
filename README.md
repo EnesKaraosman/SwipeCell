@@ -1,5 +1,10 @@
 # SwipeCell
 
+### Preview
+![](https://github.com/EnesKaraosman/SwipeCell/blob/master/Sources/SwipeCell/Resources/swipe_cell.png)
+
+![](https://github.com/EnesKaraosman/SwipeCell/blob/master/Sources/SwipeCell/Resources/swipe_cell_l2r.gif)
+
 ### Features
 
 * Swipe cell from Left to Right
