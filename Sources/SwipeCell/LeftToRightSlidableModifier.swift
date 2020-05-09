@@ -32,7 +32,7 @@ public struct LeftToRightSlidableModifier: ViewModifier {
         self.slots = slots
     }
     
-    private flushState() {
+    private func flushState() {
         withAnimation {
             self.currentSlotsWidth = 0
         }
