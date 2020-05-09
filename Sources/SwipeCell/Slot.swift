@@ -18,13 +18,31 @@ public struct Slot: Identifiable {
     public let action: () -> Void
     /// Style
     public let style: SlotStyle
+    
+    public init(
+        image : @escaping () -> Image,
+        title : @escaping () -> AnyView,
+        action: @escaping () -> Void,
+        style : SlotStyle
+    ) {
+        self.image = image
+        self.title = title
+        self.action = action
+        self.style = style
+    }
 }
 
 public struct SlotStyle {
     /// Background color of slot.
     public let background: Color
     /// Image tint color
-    public var imageColor: Color = .white
+    public let imageColor: Color
     /// Individual slot width
-    var slotWidth: CGFloat = 60
+    public let slotWidth: CGFloat
+    
+    public init(background: Color, imageColor: Color = .white, slotWidth: CGFloat = 60) {
+        self.background = background
+        self.imageColor = imageColor
+        self.slotWidth = slotWidth
+    }
 }
