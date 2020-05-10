@@ -1,27 +1,26 @@
 # SwipeCell
 
 ### Preview
-![](https://github.com/EnesKaraosman/SwipeCell/blob/master/Sources/SwipeCell/Resources/swipe_cell.png)
-
-![](https://github.com/EnesKaraosman/SwipeCell/blob/master/Sources/SwipeCell/Resources/swipe_cell_l2r.gif)
+![](https://github.com/EnesKaraosman/SwipeCell/blob/master/Sources/SwipeCell/Resources/swipe_cell_both.png)
 
 ### Features
 
 * Swipe cell from Left to Right
+* Swipe cell from Right to Left
 
 ### Todo
 
-* Add Right to Left swipe
+* Support both Right & Left swipe at the same time
 * Add destructive swipe
 
 ### Usage
 
-* Simply add `swipeFromLeading` method to your list item
+* Simply add `swipeLeft2Right`/`swipeRight2Left` method to your list item
 
 ```swift
 List {
   Text("Here is my content")
-    .swipeFromLeading(slots: [
+    .swipeLeft2Right(slots: [
       .. // here add slots
     ])
     
@@ -58,18 +57,15 @@ public struct SlotStyle {
 That's it, here is full working example
 
 ```swift
-struct SwipeCellDemoView: View {
+struct StackOverFlow: View {
     
-    @State var dynamicHeight: CGFloat = 60
-    
-    // Dummy list item content
     var slidableContent: some View {
         HStack(spacing: 16) {
             Image(systemName: "person.crop.circle.fill")
                 .resizable()
                 .scaledToFit()
                 .foregroundColor(.secondary)
-                .frame(height: self.dynamicHeight)
+                .frame(height: 60)
             VStack(alignment: .leading) {
                 Text("Enes Karaosman")
                     .fontWeight(.semibold)
@@ -79,56 +75,70 @@ struct SwipeCellDemoView: View {
         }.padding()
     }
     
+    var slots = [
+        // First item
+        Slot(
+            image: {
+                Image(systemName: "envelope.open.fill")
+        },
+            title: {
+                Text("Read")
+                    .foregroundColor(.white)
+                    .font(.footnote)
+                    .fontWeight(.semibold)
+                    .embedInAnyView()
+        },
+            action: { print("Read Slot tapped") },
+            style: .init(background: .orange)
+        ),
+        // Second item
+        Slot(
+            image: {
+                Image(systemName: "hand.raised.fill")
+        },
+            title: {
+                Text("Block")
+                    .foregroundColor(.white)
+                    .font(.footnote)
+                    .fontWeight(.semibold)
+                    .embedInAnyView()
+        },
+            action: { print("Block Slot Tapped") },
+            style: .init(background: .blue, imageColor: .red)
+        )
+    ]
+    
+    var left2Right: some View {
+        self.slidableContent
+            .frame(height: 60)
+            .padding()
+            .swipeLeft2Right(slots: self.slots)
+    }
+    
+    var right2Left: some View {
+        self.slidableContent
+            .frame(height: 60)
+            .padding()
+            .swipeRight2Left(slots: self.slots)
+    }
+    
+    var items: [AnyView] {
+        [
+            self.left2Right.embedInAnyView(),
+            self.right2Left.embedInAnyView()
+        ]
+    }
+    
     var body: some View {
         NavigationView {
             List {
-                
-                ForEach(0...3, id: \.self) { idx in
-                    
-                    self.slidableContent
-                        .swipeFromLeading(slots: [
-                            // First item
-                            Slot(
-                                image: {
-                                    Image(systemName: "envelope.open.fill")
-                                },
-                                title: {
-                                    Text("Read")
-                                        .foregroundColor(.white)
-                                        .font(.footnote)
-                                        .fontWeight(.semibold)
-                                        .embedInAnyView() // Wraps with AnyView ( .. )
-                                },
-                                action: { print("Read Slot tapped \(idx)") },
-                                style: .init(background: .orange)
-                            ),
-                            // Second item
-                            Slot(
-                                image: {
-                                    Image(systemName: "hand.raised.fill")
-                                },
-                                title: {
-                                    Text("Block")
-                                        .foregroundColor(.white)
-                                        .font(.footnote)
-                                        .fontWeight(.semibold)
-                                        .embedInAnyView() // Wraps with AnyView ( .. )
-                                },
-                                action: { print("Block Slot Tapped \(idx)") },
-                                style: .init(background: .blue, imageColor: .red)
-                            )
-                        ])
-                    
-                }
-                .listRowInsets(EdgeInsets()) // Required for Slot's height
-                
-                // Play with slider to see how slot's height adopts
-                Slider(value: $dynamicHeight.animation(), in: 40...100)
-                
+                ForEach(items.indices, id: \.self) { idx in
+                    self.items[idx]
+                }.listRowInsets(EdgeInsets())
             }.navigationBarTitle("Messages")
         }
-        
     }
+    
 }
 ```
 
@@ -138,7 +148,7 @@ In demo I used system images, but using local image is allowed as well.
 
 ```swift
 ListItem
-    .swipeFromLeading(slots: [
+    .swipeLeft2Right(slots: [
         Slot(
             image: {
                 Image("localImageName")
