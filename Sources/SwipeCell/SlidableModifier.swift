@@ -42,7 +42,8 @@ public struct SlidableModifier: AnimatableModifier {
         case .left2Right:
             return .init(width: self.currentSlotsWidth - self.totalSlotWidth, height: 0)
         case .right2Left:
-            let width = isDestructiveModeActive ? self.destructiveSlotOffset : (self.totalSlotWidth - self.currentSlotsWidth)
+//            let width = isDestructiveModeActive ? self.destructiveSlotOffset : (self.totalSlotWidth - self.currentSlotsWidth)
+            let width = isDestructiveModeActive ? self.destructiveSlotOffset : (self.destructiveSlotFixedWidth - self.currentSlotsWidth)
             return .init(width: width, height: 0)
         }
     }
@@ -59,8 +60,14 @@ public struct SlidableModifier: AnimatableModifier {
     /// Animated slot widths of total
     @State var currentSlotsWidth: CGFloat = 0
     
-    @State var destructiveSlotOffset: CGFloat = 0
-    @State var destructiveSlotWidth: CGFloat = 0
+    @State var _destructiveSlotOffset: CGFloat = 0
+    private var destructiveSlotOffset: CGFloat {
+        let width = self.destructiveSlot?.style.slotWidth ?? 0
+        let offsetAmount = (self.slideAxis == SlideAxis.right2Left ? -1 : 1) * _destructiveSlotOffset
+        return offsetAmount + width
+    }
+    
+    private let destructiveSlotFixedWidth = UIScreen.main.bounds.width * 0.8
     
     /// To restrict the bounds of slots
     private func optWidth(value: CGFloat) -> CGFloat {
@@ -94,12 +101,12 @@ public struct SlidableModifier: AnimatableModifier {
         self.destructiveSlot?.action()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             withAnimation {
-                self.destructiveSlotWidth = 0
                 self.currentSlotsWidth = 0
             }
         }
     }
     
+    // MARK: - Body
     public func body(content: Content) -> some View {
         
         ZStack(alignment: self.zStackAlignment) {
@@ -108,17 +115,18 @@ public struct SlidableModifier: AnimatableModifier {
                 .offset(self.contentOffset)
                 .onTapGesture(perform: flushState)
             
-            Rectangle()
-            .foregroundColor(.clear)
-            .overlay(slotContainer)
+            slotContainer
+            .frame(width: self.destructiveSlotFixedWidth)
             .offset(self.slotOffset)
-            .frame(width: self.totalSlotWidth)
+//                .offset(x: 200, y: 0) // Initial destructiveSlotFixedWidth, then decrease
+            .animation(.easeOut)
             
         }
         .gesture(self.dragGesture)
         
     }
     
+    // MARK: - Single Slot View
     private func slotView(slot: Slot) -> some View {
         VStack(spacing: 4) {
             Spacer() // To extend top edge
@@ -135,38 +143,32 @@ public struct SlidableModifier: AnimatableModifier {
         }
         .frame(width: slot.style.slotWidth)
         .background(slot.style.background)
-//        .modifier(
-//            DestructiveModifier(
-//                slot: slot,
-//                width: self.destructiveSlotWidth
-//            )
-//        )
         .onTapGesture {
             slot.action()
             self.flushState()
         }
     }
     
+    // MARK: - Slot Container View
     private var slotContainer: some View {
-        ZStack(alignment: .trailing) {
+        Group {
             
             if !isDestructiveModeActive {
                 HStack(spacing: 0) {
                     ForEach(self.slots, content: self.slotView)
+                    Spacer() // TODO: Change order due to axis
                 }
-                .animation(.easeIn)
+                .frame(width: self.destructiveSlotFixedWidth)
             }
             
             if isDestructiveModeActive {
                 Rectangle()
                     .foregroundColor(.blue)
-                    .frame(width: min(self.destructiveSlotWidth, UIScreen.main.bounds.width * 0.8))
-                    .offset(x: self.totalSlotWidth)
-                    .animation(.easeOut)
             }
         }
     }
     
+    // MARK: - Gesture
     private var dragGesture: some Gesture {
         DragGesture()
             .onChanged { value in
@@ -179,18 +181,16 @@ public struct SlidableModifier: AnimatableModifier {
                 }
                 
                 withAnimation {
-                    self.destructiveSlotOffset = amount
+                    self._destructiveSlotOffset = amount
                     // Check is destructive sliding active
                     // And control
                     let threshold = self.totalSlotWidth// UIScreen.main.bounds.width / 2
                     if abs(value.translation.width) > threshold {
                         print("Destructive mode (onChanged): active")
                         self._isDestructiveModeActive = true
-                        self.destructiveSlotWidth = abs(amount)
                     } else {
                         print("Destructive mode (onChanged): passive")
                         self._isDestructiveModeActive = false
-                        self.destructiveSlotWidth = 0
                     }
                     
                     self.currentSlotsWidth = self.optWidth(value: amount)
@@ -208,11 +208,9 @@ public struct SlidableModifier: AnimatableModifier {
                 let threshold = self.totalSlotWidth// UIScreen.main.bounds.width / 2
                 if abs(value.translation.width) > threshold {
                     self._isDestructiveModeActive = true
-                    self.destructiveSlotWidth = abs(value.translation.width)
                     print("Destructive mode (onEnded): active")
                 } else {
                     self._isDestructiveModeActive = false
-                    self.destructiveSlotWidth = 0
                     print("Destructive mode (onEnded): passive")
                 }
             }
@@ -221,32 +219,4 @@ public struct SlidableModifier: AnimatableModifier {
         }
     }
     
-}
-
-internal struct DestructiveModifier: ViewModifier {
-    
-    let slot: Slot
-    let width: CGFloat
-    @State private var flag = false
-    
-    private var frameWidth: CGFloat {
-        width
-    }
-    
-    func body(content: Content) -> some View {
-        HStack(spacing: 0) {
-            content
-            if flag {
-            Spacer()
-                .frame(width: frameWidth)
-            }
-        }
-        .background(slot.style.background.opacity(0.2))
-        .offset(x: frameWidth, y: 0)
-        .onAppear {
-            withAnimation {
-                flag.toggle()
-            }
-        }
-    }
 }
