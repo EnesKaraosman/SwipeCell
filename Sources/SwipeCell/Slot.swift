@@ -8,27 +8,37 @@
 import SwiftUI
 
 public struct Slot: Identifiable {
+    
     /// Id
     public let id = UUID()
+    
     /// The Icon will be displayed.
     public let image: () -> Image
+    
     /// To allow modification on Text, wrap it with AnyView.
     public let title: () -> AnyView
+    
     /// Tap Action
     public let action: () -> Void
+    
     /// Style
     public let style: SlotStyle
+
+    /// Destructive (slide completely to trigger action)
+    public let isDestructive: Bool
     
     public init(
         image : @escaping () -> Image,
         title : @escaping () -> AnyView,
         action: @escaping () -> Void,
-        style : SlotStyle
+        style : SlotStyle,
+        isDestructive: Bool = false
     ) {
         self.image = image
         self.title = title
         self.action = action
         self.style = style
+        self.isDestructive = isDestructive
     }
 }
 
