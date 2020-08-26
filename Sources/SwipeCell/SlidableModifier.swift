@@ -14,6 +14,7 @@ public struct SlidableModifier: AnimatableModifier {
         case right2Left
     }
     
+    // MARK: - Destructive Slot parameters
     private var destructiveSlot: Slot? {
         self.slots.first { $0.isDestructive }
     }
@@ -28,6 +29,7 @@ public struct SlidableModifier: AnimatableModifier {
         _isDestructiveModeActive && destructiveSlotExist
     }
     
+    // MARK: - Original Content's offset
     private var contentOffset: CGSize {
         switch self.slideAxis {
         case .left2Right:
@@ -40,10 +42,12 @@ public struct SlidableModifier: AnimatableModifier {
     private var slotOffset: CGSize {
         switch self.slideAxis {
         case .left2Right:
-            return .init(width: self.currentSlotsWidth - self.totalSlotWidth, height: 0)
+            let destructiveModeOffset = min(0, self.destructiveSlotOffset - self.slotContainerMaxFixedWidth)
+            let width = isDestructiveModeActive ? destructiveModeOffset : (self.currentSlotsWidth - self.slotContainerMaxFixedWidth)
+            return .init(width: width, height: 0)
         case .right2Left:
-//            let width = isDestructiveModeActive ? self.destructiveSlotOffset : (self.totalSlotWidth - self.currentSlotsWidth)
-            let width = isDestructiveModeActive ? self.destructiveSlotOffset : (self.destructiveSlotFixedWidth - self.currentSlotsWidth)
+            let destructiveModeOffset = max(0, self.slotContainerMaxFixedWidth - self.destructiveSlotOffset)
+            let width = isDestructiveModeActive ? destructiveModeOffset : (self.slotContainerMaxFixedWidth - self.currentSlotsWidth)
             return .init(width: width, height: 0)
         }
     }
@@ -62,12 +66,13 @@ public struct SlidableModifier: AnimatableModifier {
     
     @State var _destructiveSlotOffset: CGFloat = 0
     private var destructiveSlotOffset: CGFloat {
-        let width = self.destructiveSlot?.style.slotWidth ?? 0
+        let width = (self.destructiveSlot?.style.slotWidth ?? 0) * (self.slideAxis == SlideAxis.right2Left ? -1 : 1)
         let offsetAmount = (self.slideAxis == SlideAxis.right2Left ? -1 : 1) * _destructiveSlotOffset
         return offsetAmount + width
     }
     
-    private let destructiveSlotFixedWidth = UIScreen.main.bounds.width * 0.8
+    /// To restrict destructive mode sliding width.
+    private let slotContainerMaxFixedWidth = UIScreen.main.bounds.width * 0.8
     
     /// To restrict the bounds of slots
     private func optWidth(value: CGFloat) -> CGFloat {
@@ -116,9 +121,8 @@ public struct SlidableModifier: AnimatableModifier {
                 .onTapGesture(perform: flushState)
             
             slotContainer
-            .frame(width: self.destructiveSlotFixedWidth)
+            .frame(width: self.slotContainerMaxFixedWidth)
             .offset(self.slotOffset)
-//                .offset(x: 200, y: 0) // Initial destructiveSlotFixedWidth, then decrease
             .animation(.easeOut)
             
         }
@@ -155,12 +159,18 @@ public struct SlidableModifier: AnimatableModifier {
             
             if !isDestructiveModeActive {
                 HStack(spacing: 0) {
+                    if self.slideAxis == .left2Right {
+                        Spacer()
+                    }
                     ForEach(self.slots, content: self.slotView)
-                    Spacer() // TODO: Change order due to axis
+                    if self.slideAxis == .right2Left {
+                        Spacer()
+                    }
                 }
-                .frame(width: self.destructiveSlotFixedWidth)
+                .frame(width: self.slotContainerMaxFixedWidth) // For SwiftUI to be able to set Spacer's width
             }
             
+            // TODO: Place destructive slot here..
             if isDestructiveModeActive {
                 Rectangle()
                     .foregroundColor(.blue)
@@ -173,7 +183,7 @@ public struct SlidableModifier: AnimatableModifier {
         DragGesture()
             .onChanged { value in
                 let amount = value.translation.width
-                print(amount)
+
                 if self.slideAxis == .left2Right {
                     if amount < 0 { return }
                 } else {
@@ -182,14 +192,13 @@ public struct SlidableModifier: AnimatableModifier {
                 
                 withAnimation {
                     self._destructiveSlotOffset = amount
-                    // Check is destructive sliding active
-                    // And control
-                    let threshold = self.totalSlotWidth// UIScreen.main.bounds.width / 2
+                    
+                    let threshold = self.totalSlotWidth
                     if abs(value.translation.width) > threshold {
-                        print("Destructive mode (onChanged): active")
+//                        print("Destructive mode (onChanged): active")
                         self._isDestructiveModeActive = true
                     } else {
-                        print("Destructive mode (onChanged): passive")
+//                        print("Destructive mode (onChanged): passive")
                         self._isDestructiveModeActive = false
                     }
                     
@@ -199,13 +208,14 @@ public struct SlidableModifier: AnimatableModifier {
         }
         .onEnded { value in
             withAnimation {
+                
                 if self.currentSlotsWidth < (self.totalSlotWidth / 2) {
                     self.currentSlotsWidth = 0
                 } else {
                     self.currentSlotsWidth = self.totalSlotWidth
                 }
     
-                let threshold = self.totalSlotWidth// UIScreen.main.bounds.width / 2
+                let threshold = self.totalSlotWidth
                 if abs(value.translation.width) > threshold {
                     self._isDestructiveModeActive = true
                     print("Destructive mode (onEnded): active")
@@ -214,8 +224,6 @@ public struct SlidableModifier: AnimatableModifier {
                     print("Destructive mode (onEnded): passive")
                 }
             }
-            
-            
         }
     }
     
