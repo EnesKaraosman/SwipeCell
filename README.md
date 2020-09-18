@@ -5,22 +5,23 @@
 
 ### Features
 
-* Swipe cell from Left to Right
-* Swipe cell from Right to Left
-
-### Todo
-
-* Support both Right & Left swipe at the same time
-* Add destructive swipe
+- [x] Swipe cell from Left to Right.
+- [x] Swipe cell from Right to Left.
+- [x] Swipe to both direction for same row.
+- [ ] Destructive swipe
 
 ### Usage
 
-* Simply add `swipeLeft2Right`/`swipeRight2Left` method to your list item
+* Simply add `onSwipe(leading, trailing)` method to your list item
 
 ```swift
 List {
-  Text("Here is my content")
-    .swipeLeft2Right(slots: [
+    HStack {
+        Text("Enes Karaosman")
+        Spacer()
+    }
+    .listRowInsets(EdgeInsets())
+    .onSwipe(leading: [
       .. // here add slots
     ])
     
@@ -32,23 +33,28 @@ It's just a container that wraps your elements
 
 ```swift
 public struct Slot: Identifiable {
-    /// Id
-    public let id = UUID()
+    
     /// The Icon will be displayed.
     public let image: () -> Image
+    
     /// To allow modification on Text, wrap it with AnyView.
     public let title: () -> AnyView
+    
     /// Tap Action
     public let action: () -> Void
+    
     /// Style
     public let style: SlotStyle
 }
 
 public struct SlotStyle {
+    
     /// Background color of slot.
     public let background: Color
+    
     /// Image tint color
     public let imageColor: Color = .white
+    
     /// Individual slot width
     public let slotWidth: CGFloat = 60
 }
@@ -62,15 +68,17 @@ struct StackOverFlow: View {
     var slidableContent: some View {
         HStack(spacing: 16) {
             Image(systemName: "person.crop.circle.fill")
-                .resizable()
-                .scaledToFit()
-                .foregroundColor(.secondary)
-                .frame(height: 60)
+            .resizable()
+            .scaledToFit()
+            .foregroundColor(.secondary)
+            .frame(height: 60)
+            
             VStack(alignment: .leading) {
                 Text("Enes Karaosman")
-                    .fontWeight(.semibold)
+                .fontWeight(.semibold)
+            
                 Text("eneskaraosman53@gmail.com")
-                    .foregroundColor(.secondary)
+                .foregroundColor(.secondary)
             }
         }.padding()
     }
@@ -80,14 +88,14 @@ struct StackOverFlow: View {
         Slot(
             image: {
                 Image(systemName: "envelope.open.fill")
-        },
+            },
             title: {
                 Text("Read")
-                    .foregroundColor(.white)
-                    .font(.footnote)
-                    .fontWeight(.semibold)
-                    .embedInAnyView()
-        },
+                .foregroundColor(.white)
+                .font(.footnote)
+                .fontWeight(.semibold)
+                .embedInAnyView()
+            },
             action: { print("Read Slot tapped") },
             style: .init(background: .orange)
         ),
@@ -95,37 +103,45 @@ struct StackOverFlow: View {
         Slot(
             image: {
                 Image(systemName: "hand.raised.fill")
-        },
+            },
             title: {
                 Text("Block")
-                    .foregroundColor(.white)
-                    .font(.footnote)
-                    .fontWeight(.semibold)
-                    .embedInAnyView()
-        },
+                .foregroundColor(.white)
+                .font(.footnote)
+                .fontWeight(.semibold)
+                .embedInAnyView()
+            },
             action: { print("Block Slot Tapped") },
             style: .init(background: .blue, imageColor: .red)
         )
     ]
     
     var left2Right: some View {
-        self.slidableContent
-            .frame(height: 60)
-            .padding()
-            .swipeLeft2Right(slots: self.slots)
+        slidableContent
+        .frame(height: 60)
+        .padding()
+        .onSwipe(leading: slots)
     }
     
     var right2Left: some View {
-        self.slidableContent
-            .frame(height: 60)
-            .padding()
-            .swipeRight2Left(slots: self.slots)
+        slidableContent
+        .frame(height: 60)
+        .padding()
+        .onSwipe(trailing: slots)
+    }
+    
+    var leftAndRight: some View {
+        slidableContent
+        .frame(height: 60)
+        .padding()
+        .onSwipe(leading: slots, trailing: slots)
     }
     
     var items: [AnyView] {
         [
-            self.left2Right.embedInAnyView(),
-            self.right2Left.embedInAnyView()
+            left2Right.embedInAnyView(),
+            right2Left.embedInAnyView(),
+            leftAndRight.embedInAnyView()
         ]
     }
     
@@ -148,7 +164,7 @@ In demo I used system images, but using local image is allowed as well.
 
 ```swift
 ListItem
-    .swipeLeft2Right(slots: [
+    .onSwipe(leading: [
         Slot(
             image: {
                 Image("localImageName")
