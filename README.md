@@ -53,10 +53,10 @@ public struct SlotStyle {
     public let background: Color
     
     /// Image tint color
-    public let imageColor: Color = .white
+    public let imageColor: Color // default = .white
     
     /// Individual slot width
-    public let slotWidth: CGFloat = 60
+    public let slotWidth: CGFloat // default = 60
 }
 ```
 
