@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  SlidableModifier.swift
 //  
 //
 //  Created by Enes Karaosman on 10.05.2020.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-public struct SlidableModifier: ViewModifier {
+public struct SlidableModifier: AnimatableModifier {
     
     public enum SlideAxis {
         case left2Right
@@ -49,7 +49,7 @@ public struct SlidableModifier: ViewModifier {
         return min(abs(value), totalSlotWidth)
     }
     
-    var animatableData: Double {
+    public var animatableData: Double {
         get { Double(self.currentSlotsWidth) }
         set { self.currentSlotsWidth = CGFloat(newValue) }
     }
@@ -58,12 +58,17 @@ public struct SlidableModifier: ViewModifier {
         return slots.map { $0.style.slotWidth }.reduce(0, +)
     }
     
-    private var slots: [Slot]
-    private var slideAxis: SlideAxis
+    private var slots: [Slot] {
+        slideAxis == .left2Right ? leadingSlots : trailingSlots
+    }
     
-    public init(slots: [Slot], slideAxis: SlideAxis) {
-        self.slots = slots
-        self.slideAxis = slideAxis
+    @State private var slideAxis: SlideAxis = SlideAxis.left2Right
+    private var leadingSlots: [Slot]
+    private var trailingSlots: [Slot]
+    
+    public init(leading: [Slot], trailing: [Slot]) {
+        self.leadingSlots = leading
+        self.trailingSlots = trailing
     }
     
     private func flushState() {
@@ -77,52 +82,59 @@ public struct SlidableModifier: ViewModifier {
         ZStack(alignment: self.zStackAlignment) {
             
             content
-                .offset(self.contentOffset)
-                .onTapGesture(perform: flushState)
+            .offset(self.contentOffset)
+            .onTapGesture(perform: flushState)
             
-            Rectangle()
-                .overlay(
-                    HStack(spacing: 0) {
-                        
-                        ForEach(self.slots) { slot in
-                            VStack(spacing: 4) {
-                                Spacer() // To extend top edge
-                                
-                                slot.image()
-                                    .resizable()
-                                    .scaledToFit()
-                                    .foregroundColor(slot.style.imageColor)
-                                    .frame(width: slot.style.slotWidth * 0.4)
-                                
-                                slot.title()
-                                
-                                Spacer() // To extend bottom edge
-                            }
-                            .frame(width: slot.style.slotWidth)
-                            .background(slot.style.background)
-                            .onTapGesture {
-                                slot.action()
-                                self.flushState()
-                            }
-                        }
-                    }
-            )
+            slotContainer
             .offset(self.slotOffset)
             .frame(width: self.totalSlotWidth)
             
         }
-        .gesture(
-            DragGesture()
-                .onChanged { value in
-                    let amount = value.translation.width
+        .gesture(gesture)
+        
+    }
+    
+    // MARK: Slot Container
+    private var slotContainer: some View {
+        HStack(spacing: 0) {
+            
+            ForEach(self.slots) { slot in
+                VStack(spacing: 4) {
+                    Spacer() // To extend top edge
                     
-                    if self.slideAxis == .left2Right {
-                        if amount < 0 { return }
-                    } else {
-                        if amount > 0 { return }
-                    }
+                    slot.image()
+                        .resizable()
+                        .scaledToFit()
+                        .foregroundColor(slot.style.imageColor)
+                        .frame(width: slot.style.slotWidth * 0.4)
                     
-                    self.currentSlotsWidth = self.optWidth(value: amount)
+                    slot.title()
+                    
+                    Spacer() // To extend bottom edge
+                }
+                .frame(width: slot.style.slotWidth)
+                .background(slot.style.background)
+                .onTapGesture {
+                    slot.action()
+                    self.flushState()
+                }
+            }
+        }
+    }
+    
+    // MARK: - Drag Gesture
+    private var gesture: some Gesture {
+        DragGesture()
+            .onChanged { value in
+                let amount = value.translation.width
+                
+                if amount < 0 {
+                    self.slideAxis = .right2Left
+                } else {
+                    self.slideAxis = .left2Right
+                }
+                
+                self.currentSlotsWidth = self.optWidth(value: amount)
             }
             .onEnded { value in
                 withAnimation {
@@ -133,8 +145,6 @@ public struct SlidableModifier: ViewModifier {
                     }
                 }
             }
-        )
-        
     }
     
 }

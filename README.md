@@ -5,9 +5,7 @@
 
 ### Features
 
-- [x] Swipe cell from Left to Right.
-- [x] Swipe cell from Right to Left.
-- [x] Swipe to both direction for same row.
+- [x] Swipe cell from Left2Right & Right2Left.
 - [ ] Destructive swipe
 
 ### Usage
