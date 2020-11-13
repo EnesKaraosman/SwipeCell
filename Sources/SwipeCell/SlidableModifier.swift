@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-public struct SlidableModifier: AnimatableModifier {
+public struct SlidableModifier: ViewModifier, Animatable {
     
     public enum SlideAxis {
         case left2Right

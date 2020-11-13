@@ -61,7 +61,7 @@ public struct SlotStyle {
 That's it, here is full working example
 
 ```swift
-struct StackOverFlow: View {
+struct SwipeCellDemoView: View {
     
     var slidableContent: some View {
         HStack(spacing: 16) {
