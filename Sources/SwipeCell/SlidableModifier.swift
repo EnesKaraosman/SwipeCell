@@ -83,8 +83,14 @@ public struct SlidableModifier: ViewModifier, Animatable {
             
             content
             .offset(self.contentOffset)
-            .onTapGesture(perform: flushState)
-            
+
+            if !currentSlotsWidth.isZero {
+                Rectangle()
+                .foregroundColor(.white)
+                .opacity(0.001)
+                .onTapGesture(perform: flushState)
+            }
+
             slotContainer
             .offset(self.slotOffset)
             .frame(width: self.totalSlotWidth)
