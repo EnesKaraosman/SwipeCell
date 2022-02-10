@@ -107,13 +107,17 @@ public struct SlidableModifier: ViewModifier, Animatable {
             ForEach(self.slots) { slot in
                 VStack(spacing: 4) {
                     Spacer() // To extend top edge
-                    
-                    slot.image()
-                        .resizable()
-                        .scaledToFit()
-                        .foregroundColor(slot.style.imageColor)
-                        .frame(width: slot.style.slotWidth * 0.4)
-                    
+
+                    if slot.style.formatImage {
+                        slot.image()
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: slot.style.slotWidth * 0.4)
+                            .foregroundColor(slot.style.imageColor)
+                    } else {
+                        slot.image()
+                    }
+
                     slot.title()
                     
                     Spacer() // To extend bottom edge

@@ -37,12 +37,15 @@ public struct SlotStyle {
     public let background: Color
     /// Image tint color
     public let imageColor: Color
+    /// Automatically format image to slot width
+    public let formatImage: Bool
     /// Individual slot width
     public let slotWidth: CGFloat
     
-    public init(background: Color, imageColor: Color = .white, slotWidth: CGFloat = 60) {
+    public init(background: Color, imageColor: Color = .white, formatImage: Bool = true, slotWidth: CGFloat = 60) {
         self.background = background
         self.imageColor = imageColor
+        self.formatImage = formatImage
         self.slotWidth = slotWidth
     }
 }
