@@ -15,38 +15,33 @@ public struct SlidableModifier: ViewModifier, Animatable {
     }
     
     private var contentOffset: CGSize {
-        switch self.slideAxis {
-        case .left2Right:
-            return .init(width: self.currentSlotsWidth, height: 0)
-        case .right2Left:
-            return .init(width: -self.currentSlotsWidth, height: 0)
+        return switch slideAxis {
+        case .left2Right: .init(width: currentSlotsWidth, height: 0)
+        case .right2Left: .init(width: -currentSlotsWidth, height: 0)
         }
     }
     
     private var slotOffset: CGSize {
-        switch self.slideAxis {
-        case .left2Right:
-            return .init(width: self.currentSlotsWidth - self.totalSlotWidth, height: 0)
-        case .right2Left:
-            return .init(width: self.totalSlotWidth - self.currentSlotsWidth, height: 0)
+        return switch slideAxis {
+        case .left2Right: .init(width: currentSlotsWidth - totalSlotWidth, height: 0)
+        case .right2Left: .init(width: totalSlotWidth - currentSlotsWidth, height: 0)
         }
     }
     
     private var zStackAlignment: Alignment {
-        switch self.slideAxis {
-        case .left2Right:
-            return .leading
-        case .right2Left:
-            return .trailing
+        return switch slideAxis {
+        case .left2Right: .leading
+        case .right2Left: .trailing
         }
     }
     
     /// Animated slot widths of total
-    @State var currentSlotsWidth: CGFloat = 0
+    @State
+    private var currentSlotsWidth: CGFloat = 0
     
     /// To restrict the bounds of slots
     private func optWidth(value: CGFloat) -> CGFloat {
-        return min(abs(value), totalSlotWidth)
+        min(abs(value), totalSlotWidth)
     }
     
     public var animatableData: Double {
@@ -55,7 +50,7 @@ public struct SlidableModifier: ViewModifier, Animatable {
     }
     
     private var totalSlotWidth: CGFloat {
-        return slots.map { $0.style.slotWidth }.reduce(0, +)
+        slots.map(\.style.slotWidth).reduce(0, +)
     }
     
     private var slots: [Slot] {
@@ -73,27 +68,27 @@ public struct SlidableModifier: ViewModifier, Animatable {
     
     private func flushState() {
         withAnimation {
-            self.currentSlotsWidth = 0
+            currentSlotsWidth = 0
         }
     }
     
     public func body(content: Content) -> some View {
         
-        ZStack(alignment: self.zStackAlignment) {
+        ZStack(alignment: zStackAlignment) {
             
             content
-            .offset(self.contentOffset)
+                .offset(contentOffset)
 
             if !currentSlotsWidth.isZero {
                 Rectangle()
-                .foregroundColor(.white)
-                .opacity(0.001)
-                .onTapGesture(perform: flushState)
+                    .foregroundColor(.white)
+                    .opacity(0.001)
+                    .onTapGesture(perform: flushState)
             }
 
             slotContainer
-            .offset(self.slotOffset)
-            .frame(width: self.totalSlotWidth)
+                .offset(slotOffset)
+                .frame(width: totalSlotWidth)
             
         }
         .gesture(gesture)
@@ -126,7 +121,7 @@ public struct SlidableModifier: ViewModifier, Animatable {
                 .background(slot.style.background)
                 .onTapGesture {
                     slot.action()
-                    self.flushState()
+                    flushState()
                 }
             }
         }
@@ -139,22 +134,21 @@ public struct SlidableModifier: ViewModifier, Animatable {
                 let amount = value.translation.width
                 
                 if amount < 0 {
-                    self.slideAxis = .right2Left
+                    slideAxis = .right2Left
                 } else {
-                    self.slideAxis = .left2Right
+                    slideAxis = .left2Right
                 }
                 
-                self.currentSlotsWidth = self.optWidth(value: amount)
+                currentSlotsWidth = optWidth(value: amount)
             }
             .onEnded { value in
                 withAnimation {
-                    if self.currentSlotsWidth < (self.totalSlotWidth / 2) {
-                        self.currentSlotsWidth = 0
+                    if currentSlotsWidth < (totalSlotWidth / 2) {
+                        currentSlotsWidth = 0
                     } else {
-                        self.currentSlotsWidth = self.totalSlotWidth
+                        currentSlotsWidth = totalSlotWidth
                     }
                 }
             }
     }
-    
 }

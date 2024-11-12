@@ -10,10 +10,10 @@ import SwiftUI
 public extension View {
     
     func onSwipe(leading: [Slot] = [], trailing: [Slot] = []) -> some View {
-        return self.modifier(SlidableModifier(leading: leading, trailing: trailing))
+        modifier(SlidableModifier(leading: leading, trailing: trailing))
     }
     
     func embedInAnyView() -> AnyView {
-        return AnyView ( self )
+        AnyView ( self )
     }
 }
